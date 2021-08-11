@@ -8,37 +8,35 @@
 
     <title>블랙핑크닮은꼴찾기</title>
     <link href="style.css" rel="stylesheet" type="text/css" />
+    <meta property="og:image" content="./thumnail.png" />
   </head>
   <body>
     <script src="script.js"></script>
+
     <!-- 티처블머신에서 가져오기 -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">Navbar</a>
+    <a class="navbar-brand" href="#">블랙핑크닮은꼴</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
+          <a class="nav-link active" aria-current="page" href="#">처음으로</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Features</a>
+          <a class="nav-link" href="#">다른 인공지능서비스 보기</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Pricing</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+          <a class="nav-link" href="#">코난쌤TV구독하기</a>
         </li>
       </ul>
     </div>
   </div>
 </nav>
 
-<div id="webcam-container"></div>
-<div id="label-container"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 
@@ -88,14 +86,80 @@
         // predict can take in an image, video or canvas html element
         var imgs=document.getElementById("face-image"); //첨부이미지 가져오기
         const prediction = await model.predict(imgs,false);
+        prediction.sort((a, b) => parseFloat(b.probability) - parseFloat(a.probability));
+        //결과 표시
         for (let i = 0; i < maxPredictions; i++) {
             const classPrediction =
                 prediction[i].className + ": " + prediction[i].probability.toFixed(2);
             labelContainer.childNodes[i].innerHTML = classPrediction;
         }
+        //이렇게 추가하기
+       var resultTitle, resultExplain, resultCeleb;
+               switch (prediction[0].className) {
+                    case "lisa":
+                        resultTitle = "리사를 닮았어요"
+                        resultExplain = "리사에 대한 설명"
+                        resultCeleb = "포지션: 그룹 내에서 메인댄서와 리드래퍼, 서브보컬을 맡고 있다."
+                        break;
+                    case "jeny":
+                        resultTitle = "제니를 닮았어요"
+                        resultExplain = "제니에 대한 설명"
+                        resultCeleb = "포지션: 그룹 내에서 메인래퍼와 리드보컬을 담당하고 있다."
+                        break;
+                    case "jisu":
+                        resultTitle = "지수를 닮았어요"
+                        resultExplain = "지수에 대한 설명"
+                        resultCeleb = "포지션:그룹 내에서 리드보컬을 맡고 있다. "
+                        break;
+                    case "rose":
+                        resultTitle = "로제를 닮았어요"
+                        resultExplain = "로제에 대한 설명"
+                        resultCeleb = "포지션: 그룹 내에서 메인보컬과 리드댄서를 담당하고 있다."
+                        break;
+                    default:
+                        resultTitle = "알수없음"
+                        resultExplain = ""
+                        resultCeleb = ""
+                }
+             
+            var title = "<div class='" + prediction[0].className + "-animal-title'>" + resultTitle + "</div>"
+            var explain = "<div class='animal-explain pt-2'>" + resultExplain + "</div>"
+            var celeb = "<div class='" + prediction[0].className + "-animal-celeb pt-2 pb-2'>" + resultCeleb + "</div>"
+            $('.result-message').html(title + explain + celeb);
+            var barWidth;
+            
+            for (let i = 0; i < maxPredictions; i++) {
+                if (prediction[i].probability.toFixed(2) > 0.1) {
+                    barWidth = Math.round(prediction[i].probability.toFixed(2) * 100) + "%";
+                } else if (prediction[i].probability.toFixed(2) >= 0.01) {
+                    barWidth = "4%"
+                } else {
+                    barWidth = "2%"
+                }
+                var labelTitle;
+                switch (prediction[i].className) {
+                    case "lisa":
+                        labelTitle = "리사"
+                        break;
+                    case "jeny":
+                        labelTitle = "제니"
+                        break;
+                    case "jisu":
+                        labelTitle = "지수"
+                        break;
+                    case "rose":
+                        labelTitle = "로제"
+                        break;
+                    default:
+                        labelTitle = "알수없음"
+                }
+                var label = "<div class='animal-label d-flex align-items-center'>" + labelTitle + "</div>"
+                
+                // 게이지바 계산
+                var bar = "<div class='bar-container position-relative container'><div class='" + prediction[i].className + "-box'></div><div class='d-flex justify-content-center align-items-center " + prediction[i].className + "-bar' style='width: " + barWidth + "'><span class='d-block percent-text'>" + Math.round(prediction[i].probability.toFixed(2) * 100) + "%</span></div></div>"
+                labelContainer.childNodes[i].innerHTML = label + bar;
+            } 
     }
-
-
     </script>
 <!-- 티처블머신 코드 끝 -->
 <!-- 코드펜 js -->
@@ -107,7 +171,7 @@
 
     reader.onload = function(e) {
       $('.image-upload-wrap').hide();
-
+      $('#loading').show();
       $('.file-upload-image').attr('src', e.target.result);
       $('.file-upload-content').show();
 
@@ -139,31 +203,25 @@ $('.image-upload-wrap').bind('dragover', function () {
 });
 </script>
 <!-- 코드펜에서 붙여넣기 -->
-    <script class="jsbin" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<script class="jsbin" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
 <div class="file-upload">
-  <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )">사진올리셈</button>
-
+  <!-- <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )">사진올리셈</button> -->
+  <div class="mt-3 container file-upload">
   <div class="image-upload-wrap">
     <input class="file-upload-input" type='file' onchange="readURL(this);" accept="image/*" />
     <div class="drag-text">
-      <h3>사진드래그하셈</h3>
+      <img src="./upload.svg" class="mt-5 pt-5 upload">
+      <h3 class="mb-5 pb-5 pt-4  upload-text">사진드래그하셈</h3>
     </div>
   </div>
+  
   <div class="file-upload-content">
     <img class="file-upload-image" id="face-image" src="#" alt="your image" />
-
+  <div id="label-container"></div>
     <div id="loading" class="animated bounce">
-  <div class="spinner-border" role="status">
-    <span class="sr-only">AI가 분석중</span>
-
-    <div class="image-title-wrap">
-      <button type="button" onclick="removeUpload()" class="remove-image">Remove <span class="image-title">Uploaded Image</span></button>
+      <div class="spinner-border" role="status">
+      </div>
+      <p class="text-center">AI가 당신의 얼굴을 분석중입니다.</p>
     </div>
-  </div>
-</div>
-<!-- <div id="loading" class="animated bounce">
-  <div class="spinner-border" role="status">
-    <span class="sr-only">AI가 분석중</span> -->
-<!-- 코드펜 끝 -->
   </body>
 </html>
